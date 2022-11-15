@@ -15,17 +15,46 @@ type Article struct {
 func main() {
 	engine := gin.Default()
 
-	// 加载HTML模板
+	////////// 加载HTML模板 //////////
 
 	// engine.LoadHTMLFiles("templates/news.html")
 	// engine.LoadHTMLFiles("templates/goods.html")
 	// engine.LoadHTMLFiles("templates/goods.html", "templates/news.html")
 
 	// engine.LoadHTMLFiles("templates/*") // 此用法不对
-	engine.LoadHTMLGlob("templates/*")
+	// engine.LoadHTMLGlob("templates/*")
+	engine.LoadHTMLGlob("templates/**/*") // 加载templates子文件夹的内容
 
+	////////// 处理请求 //////////
+
+	// engine.GET("/", func(ctx *gin.Context) {
+	// 	ctx.String(http.StatusOK, "我是首页！你好，%v\n", "Golang!")
+	// })
 	engine.GET("/", func(ctx *gin.Context) {
-		ctx.String(http.StatusOK, "你好，%v\n", "Golang!")
+		ctx.HTML(http.StatusOK, "default/index.html", gin.H{
+			"title": "我是前台数据",
+			"msg":   "我是msg",
+			"score": 50,
+			"hobby": []string{"吃饭", "睡觉", "写代码"},
+			"newsList": []interface{}{
+				&Article{
+					Title:   "标题111",
+					Desc:    "描述111",
+					Content: "内容111",
+				},
+				&Article{
+					Title:   "标题222",
+					Desc:    "描述222",
+					Content: "内容222",
+				},
+			},
+			"emptySlice": []string{},
+			"news": &Article{
+				Title:   "标题333",
+				Desc:    "描述333",
+				Content: "内容333",
+			},
+		})
 	})
 
 	engine.GET("/news1", func(ctx *gin.Context) {
@@ -33,17 +62,30 @@ func main() {
 	})
 
 	engine.GET("/news2", func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK, "news.html", gin.H{
+		ctx.HTML(http.StatusOK, "default/news2.html", gin.H{
 			"title": "我是后台数据",
 		})
 	})
 
-	engine.GET("/goods", func(ctx *gin.Context) {
-		ctx.HTML(http.StatusOK, "goods.html", gin.H{
+	engine.GET("/news3", func(ctx *gin.Context) {
+		a := &Article{
+			Title:   "新闻标题",
+			Desc:    "新闻描述",
+			Content: "新闻内容",
+		}
+		ctx.HTML(http.StatusOK, "default/news3.html", gin.H{
+			"news": a,
+		})
+	})
+
+	engine.GET("/goods1", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "default/goods1.html", gin.H{
 			"name":  "PS5",
 			"price": 200,
 		})
 	})
+
+	////////// json //////////
 
 	engine.GET("/json1", func(ctx *gin.Context) {
 		ctx.JSON(http.StatusOK, map[string]interface{}{
@@ -92,6 +134,8 @@ func main() {
 		})
 	})
 
+	////////// restful api //////////
+
 	engine.POST("/create", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "创建请求\n")
 	})
@@ -102,6 +146,25 @@ func main() {
 
 	engine.DELETE("/delete", func(ctx *gin.Context) {
 		ctx.String(http.StatusOK, "删除请求\n")
+	})
+
+	////////// 后台 //////////
+
+	engine.GET("/admin", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "admin/index.html", gin.H{
+			"title": "后台主页",
+		})
+	})
+
+	engine.GET("/admin/news1", func(ctx *gin.Context) {
+		a := &Article{
+			Title:   "新闻标题",
+			Desc:    "新闻描述",
+			Content: "新闻内容",
+		}
+		ctx.HTML(http.StatusOK, "admin/news1.html", gin.H{
+			"news": a,
+		})
 	})
 
 	engine.Run(":8008")

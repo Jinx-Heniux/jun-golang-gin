@@ -1,7 +1,9 @@
 package main
 
 import (
+	"html/template"
 	"net/http"
+	"time"
 
 	"github.com/gin-gonic/gin"
 )
@@ -12,8 +14,20 @@ type Article struct {
 	Content string `json:"content"`
 }
 
+func UnixToTime(timestamp int) string {
+	t := time.Unix(int64(timestamp), 0)
+	return t.Format("2006-01-02 15:04:05")
+}
+
 func main() {
 	engine := gin.Default()
+
+	// 注意：要把自定义模板函数放在加载模板前
+	engine.SetFuncMap(template.FuncMap{
+		"UnixToTime": UnixToTime,
+	})
+
+	engine.Static("/static", "./static")
 
 	////////// 加载HTML模板 //////////
 
@@ -54,6 +68,7 @@ func main() {
 				Desc:    "描述333",
 				Content: "内容333",
 			},
+			"date": 1629423555,
 		})
 	})
 

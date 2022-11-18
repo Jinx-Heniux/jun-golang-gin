@@ -6,9 +6,15 @@
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>前台主页</title>
+    <link rel="stylesheet" href="/static/css/base.css">
 </head>
 <body>
-    {{.title}} <br>
+
+    {{template "public/page_header.html" .}}
+
+    <img src="static/images/node.jpg" alt="">
+
+    <h2>{{.title}}</h2> <br>
 
     <!-- 定义变量 -->
     {{$t := .title}}
@@ -51,9 +57,15 @@
         {{.Content}} <br>
     {{end}}
 
+    <br>
+    <!-- 预定义函数 内置模板函数 -->
+    {{len .title}} <br>
 
+    <!-- 自定义模板函数 -->
+    {{.date}} <br>
+    {{UnixToTime .date}} <br>
 
-
+    {{template "public/page_footer.html" .}}
 </body>
 </html>
 {{ end }}

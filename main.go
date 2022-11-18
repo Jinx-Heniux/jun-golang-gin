@@ -27,8 +27,6 @@ func main() {
 		"UnixToTime": UnixToTime,
 	})
 
-	engine.Static("/static", "./static")
-
 	////////// 加载HTML模板 //////////
 
 	// engine.LoadHTMLFiles("templates/news.html")
@@ -39,12 +37,16 @@ func main() {
 	// engine.LoadHTMLGlob("templates/*")
 	engine.LoadHTMLGlob("templates/**/*") // 加载templates子文件夹的内容
 
+	////////// 配置静态web服务 //////////
+	engine.Static("/static", "./static")
+
 	////////// 处理请求 //////////
 
 	// engine.GET("/", func(ctx *gin.Context) {
 	// 	ctx.String(http.StatusOK, "我是首页！你好，%v\n", "Golang!")
 	// })
 	engine.GET("/", func(ctx *gin.Context) {
+
 		ctx.HTML(http.StatusOK, "default/index.html", gin.H{
 			"title": "我是前台数据",
 			"msg":   "我是msg",
@@ -70,6 +72,7 @@ func main() {
 			},
 			"date": 1629423555,
 		})
+
 	})
 
 	engine.GET("/news1", func(ctx *gin.Context) {
@@ -139,6 +142,28 @@ func main() {
 			Title:   "标题 jsonp",
 			Desc:    "描述",
 			Content: "内容",
+		})
+	})
+
+	// 获取Get请求的传值
+	engine.GET("/json4", func(ctx *gin.Context) {
+
+		username := ctx.Query("username")
+		age := ctx.Query("age")
+		page := ctx.DefaultQuery("page", "1")
+		ctx.JSON(http.StatusOK, gin.H{
+			"username": username,
+			"age":      age,
+			"page":     page,
+		})
+	})
+
+	// 获取Get请求的传值
+	engine.GET("/article", func(ctx *gin.Context) {
+		id := ctx.DefaultQuery("id", "1")
+		ctx.JSON(http.StatusOK, gin.H{
+			"msg": "新闻详情",
+			"id":  id,
 		})
 	})
 

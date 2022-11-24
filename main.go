@@ -1,6 +1,8 @@
 package main
 
 import (
+	"encoding/xml"
+	"fmt"
 	"html/template"
 	"net/http"
 	"time"
@@ -8,10 +10,20 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
-type Article struct {
+type Article1 struct {
 	Title   string `json:"title"`
 	Desc    string `json:"desc"`
 	Content string `json:"content"`
+}
+
+type Article2 struct {
+	Title   string `json:"title" xml:"title"`
+	Content string `json:"content" xml:"content"`
+}
+
+type UserInfo struct {
+	Username string `json:"user" form:"username"`
+	Password string `json:"pw" form:"password"`
 }
 
 func UnixToTime(timestamp int) string {
@@ -53,19 +65,19 @@ func main() {
 			"score": 50,
 			"hobby": []string{"吃饭", "睡觉", "写代码"},
 			"newsList": []interface{}{
-				&Article{
+				&Article1{
 					Title:   "标题111",
 					Desc:    "描述111",
 					Content: "内容111",
 				},
-				&Article{
+				&Article1{
 					Title:   "标题222",
 					Desc:    "描述222",
 					Content: "内容222",
 				},
 			},
 			"emptySlice": []string{},
-			"news": &Article{
+			"news": &Article1{
 				Title:   "标题333",
 				Desc:    "描述333",
 				Content: "内容333",
@@ -86,7 +98,7 @@ func main() {
 	})
 
 	engine.GET("/news3", func(ctx *gin.Context) {
-		a := &Article{
+		a := &Article1{
 			Title:   "新闻标题",
 			Desc:    "新闻描述",
 			Content: "新闻内容",
@@ -130,7 +142,7 @@ func main() {
 	// })
 
 	engine.GET("/json3", func(ctx *gin.Context) {
-		ctx.JSON(http.StatusOK, &Article{
+		ctx.JSON(http.StatusOK, &Article1{
 			Title:   "标题3",
 			Desc:    "描述",
 			Content: "内容",
@@ -138,7 +150,7 @@ func main() {
 	})
 
 	engine.GET("/jsonp", func(ctx *gin.Context) {
-		ctx.JSONP(http.StatusOK, &Article{
+		ctx.JSONP(http.StatusOK, &Article1{
 			Title:   "标题 jsonp",
 			Desc:    "描述",
 			Content: "内容",
@@ -167,11 +179,79 @@ func main() {
 		})
 	})
 
-	engine.GET("/xml", func(ctx *gin.Context) {
+	// post
+	engine.GET("/user1", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "default/user1.html", gin.H{})
+	})
+
+	// 获取Post请求的传值 表单数据
+	engine.POST("/doAddUser1", func(ctx *gin.Context) {
+		username := ctx.PostForm("username")
+		password := ctx.PostForm("password")
+		age := ctx.DefaultPostForm("age", "20")
+
+		ctx.JSON(http.StatusOK, gin.H{
+			"username": username,
+			"password": password,
+			"age":      age,
+		})
+	})
+
+	// 获取Get Post传递的数据绑定到结构体
+	// http://127.0.0.1:8008/getUser?username=zhangsan&password=123
+	engine.GET("/getUser", func(ctx *gin.Context) {
+		user := &UserInfo{}
+		fmt.Printf("user: %p | %p | %v\n", &user, user, user)
+		if err := ctx.ShouldBind(user); err == nil {
+			fmt.Printf("user: %p | %p | %v\n", &user, user, user)
+			ctx.JSON(http.StatusOK, user)
+		} else {
+			ctx.JSON(http.StatusOK, gin.H{
+				"err": err.Error(),
+			})
+		}
+	})
+
+	// 获取Get Post传递的数据绑定到结构体
+	engine.GET("/user2", func(ctx *gin.Context) {
+		ctx.HTML(http.StatusOK, "default/user2.html", gin.H{})
+	})
+	engine.POST("/doAddUser2", func(ctx *gin.Context) {
+		user := &UserInfo{}
+		fmt.Printf("user: %p | %p | %v\n", &user, user, user)
+		if err := ctx.ShouldBind(user); err == nil {
+			fmt.Printf("user: %p | %p | %v\n", &user, user, user)
+			ctx.JSON(http.StatusOK, user)
+		} else {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"err": err.Error(),
+			})
+		}
+	})
+
+	// xml
+	engine.GET("/xml1", func(ctx *gin.Context) {
 		ctx.JSONP(http.StatusOK, gin.H{
 			"success: ": true,
 			"message: ": "你好啊！ xml",
 		})
+	})
+
+	// 获取Post Xml数据
+	engine.POST("/xml2", func(ctx *gin.Context) {
+		article := &Article2{}
+		fmt.Printf("article: %p | %p | %v\n", &article, article, article)
+		xmlRawData, _ := ctx.GetRawData()
+		fmt.Printf("raw data: %v\n", xmlRawData)
+		if err := xml.Unmarshal(xmlRawData, article); err == nil {
+			fmt.Printf("article: %p | %p | %v\n", &article, article, article)
+			ctx.JSON(http.StatusOK, article)
+		} else {
+			ctx.JSON(http.StatusBadRequest, gin.H{
+				"err": err.Error(),
+			})
+		}
+
 	})
 
 	////////// restful api //////////
@@ -188,6 +268,13 @@ func main() {
 		ctx.String(http.StatusOK, "删除请求\n")
 	})
 
+	////////// 动态路由 //////////
+	// /list1/123 /list1/456
+	engine.GET("/list1/:cid", func(ctx *gin.Context) {
+		cid := ctx.Param("cid")
+		ctx.String(200, "%v", cid)
+	})
+
 	////////// 后台 //////////
 
 	engine.GET("/admin", func(ctx *gin.Context) {
@@ -197,7 +284,7 @@ func main() {
 	})
 
 	engine.GET("/admin/news1", func(ctx *gin.Context) {
-		a := &Article{
+		a := &Article1{
 			Title:   "新闻标题",
 			Desc:    "新闻描述",
 			Content: "新闻内容",
